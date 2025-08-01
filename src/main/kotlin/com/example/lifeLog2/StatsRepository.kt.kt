@@ -10,7 +10,7 @@ interface StatsRepository {
 
     data class StatsEntry(
         var deaths: Long = 0,
-        var playTicks: Long = 0     // 1 tick = 1/20 秒
+        var playTicks: Long = 0
     ) {
         val hours get() = playTicks / 20 / 3600
     }

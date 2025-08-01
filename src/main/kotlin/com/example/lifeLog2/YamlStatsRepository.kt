@@ -18,7 +18,6 @@ class YamlStatsRepository(private val plugin: LifeLog2Plugin) : StatsRepository 
     fun load() {
         plugin.dataFolder.mkdirs()
         if (file.exists()) yaml.load(file)
-
         yaml.getKeys(false).forEach { id ->
             val uuid = UUID.fromString(id)
             data[uuid] = StatsEntry(
@@ -26,35 +25,32 @@ class YamlStatsRepository(private val plugin: LifeLog2Plugin) : StatsRepository 
                 yaml.getLong("$id.playTicks")
             )
         }
-        backfillWorldStats()
+        backfill()
     }
 
-    private fun backfillWorldStats() {
-        Bukkit.getWorlds().forEach { world ->
-            File(world.worldFolder, "stats")
-                .listFiles { _, n -> n.endsWith(".json") }
-                ?.forEach { f ->
-                    val root = JsonParser.parseReader(FileReader(f)).asJsonObject
-                    val custom = root["stats"].asJsonObject["minecraft:custom"].asJsonObject
-                    val deaths = custom["minecraft:deaths"]?.asLong ?: 0L
-                    val play   = custom["minecraft:play_time"]?.asLong ?: 0L
-                    val uuid   = UUID.fromString(f.name.removeSuffix(".json"))
-                    val entry  = data.computeIfAbsent(uuid) { StatsEntry() }
-                    entry.deaths    = maxOf(entry.deaths, deaths)
-                    entry.playTicks = maxOf(entry.playTicks, play)
-                }
+    private fun backfill() {
+        Bukkit.getWorlds().forEach { w ->
+            File(w.worldFolder, "stats").listFiles { _, n -> n.endsWith(".json") }?.forEach { f ->
+                val json = JsonParser.parseReader(FileReader(f)).asJsonObject
+                val custom = json["stats"].asJsonObject["minecraft:custom"].asJsonObject
+                val deaths = custom["minecraft:deaths"]?.asLong ?: 0
+                val play   = custom["minecraft:play_time"]?.asLong ?: 0
+                val uuid   = UUID.fromString(f.name.removeSuffix(".json"))
+                val entry  = data.computeIfAbsent(uuid) { StatsEntry() }
+                entry.deaths = maxOf(entry.deaths, deaths)
+                entry.playTicks = maxOf(entry.playTicks, play)
+            }
         }
     }
 
     private fun save() {
-        data.forEach { (u, e) ->
-            yaml.set("$u.deaths", e.deaths)
-            yaml.set("$u.playTicks", e.playTicks)
+        data.forEach { (u, s) ->
+            yaml.set("$u.deaths", s.deaths)
+            yaml.set("$u.playTicks", s.playTicks)
         }
         yaml.save(file)
     }
 
-    /* StatsRepository 実装 */
     override fun incrementDeath(uuid: UUID) {
         data.computeIfAbsent(uuid) { StatsEntry() }.deaths++
         save()
@@ -67,8 +63,7 @@ class YamlStatsRepository(private val plugin: LifeLog2Plugin) : StatsRepository 
 
     override fun endSession(uuid: UUID, millis: Long) {
         val start = plugin.sessions.remove(uuid) ?: return
-        val ticks = (millis - start) / 50
-        data.computeIfAbsent(uuid) { StatsEntry() }.playTicks += ticks
+        data.computeIfAbsent(uuid) { StatsEntry() }.playTicks += (millis - start) / 50
         save()
     }
 
