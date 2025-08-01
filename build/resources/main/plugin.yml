@@ -1,0 +1,14 @@
+name: LifeLog2
+version: 1.0-SNAPSHOT
+main: com.example.lifelog2.LifeLog2Plugin
+api-version: 1.21
+
+description: Tracks deaths & playtime; provides rankings.
+
+commands:
+  lifelog:
+    description: Show your stats or the leaderboard
+    usage: /<command> [top|me]
+permissions:
+  lifelog.use:
+    default: true
