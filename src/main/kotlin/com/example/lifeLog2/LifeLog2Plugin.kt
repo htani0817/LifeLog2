@@ -19,6 +19,7 @@ class LifeLog2Plugin : JavaPlugin(), Listener {
     override fun onEnable() {
         repo = YamlStatsRepository(this).apply { load() }
         server.pluginManager.registerEvents(this, this)
+        server.pluginManager.registerEvents(GuiListener(), this)
 
         val board = server.scoreboardManager!!.mainScoreboard
         val obj = board.getObjective("lifelog")

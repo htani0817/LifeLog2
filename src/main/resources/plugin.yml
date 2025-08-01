@@ -8,7 +8,7 @@ description: Tracks deaths & playtime; provides rankings.
 commands:
   lifelog:
     description: Show your stats or the leaderboard
-    usage: /<command> [top|me]
+    usage: /<command> [me|top|gui]
 permissions:
   lifelog.use:
     default: true
